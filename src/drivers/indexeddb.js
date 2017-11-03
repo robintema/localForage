@@ -154,27 +154,25 @@ function _getConnection(dbInfo, upgradeNeeded) {
 
         var openreq = idb.open.apply(idb, dbArgs);
 
-        if (upgradeNeeded) {
-            openreq.onupgradeneeded = function(e) {
-                var db = openreq.result;
-                try {
-                    db.createObjectStore(dbInfo.storeName);
-                    if (e.oldVersion <= 1) {
-                        // Added when support for blob shims was added
-                        db.createObjectStore(DETECT_BLOB_SUPPORT_STORE);
-                    }
-                } catch (ex) {
-                    if (ex.name === 'ConstraintError') {
-                        console.warn('The database "' + dbInfo.name + '"' +
-                            ' has been upgraded from version ' + e.oldVersion +
-                            ' to version ' + e.newVersion +
-                            ', but the storage "' + dbInfo.storeName + '" already exists.');
-                    } else {
-                        throw ex;
-                    }
+        openreq.onupgradeneeded = function(e) {
+            var db = openreq.result;
+            try {
+                db.createObjectStore(dbInfo.storeName);
+                if (e.oldVersion <= 1) {
+                    // Added when support for blob shims was added
+                    db.createObjectStore(DETECT_BLOB_SUPPORT_STORE);
                 }
-            };
-        }
+            } catch (ex) {
+                if (ex.name === 'ConstraintError') {
+                    console.warn('The database "' + dbInfo.name + '"' +
+                        ' has been upgraded from version ' + e.oldVersion +
+                        ' to version ' + e.newVersion +
+                        ', but the storage "' + dbInfo.storeName + '" already exists.');
+                } else {
+                    throw ex;
+                }
+            }
+        };
 
         openreq.onerror = function(e) {
             e.preventDefault();
